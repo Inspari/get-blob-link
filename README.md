@@ -1,1 +1,1 @@
-# get-lob-link
+# get-blob-link
