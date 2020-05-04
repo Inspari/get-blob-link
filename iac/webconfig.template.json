@@ -1,0 +1,33 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "aadAppRegistrationClientId": {
+            "type": "string"
+        },
+        "aadAppRegistrationUri": {
+            "type": "securestring"
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/sites/config",
+            "name": "authsettings",
+            "apiVersion": "2019-08-01",
+            "properties": {
+                "enabled": true,
+                "unauthenticatedClientAction": "RedirectToLoginPage",
+                "tokenStoreEnabled": false,
+                "defaultProvider": "AzureActiveDirectory",
+                "clientId": "[parameters('aadAppRegistrationClientId')]",
+                "issuer": "[concat('https://login.microsoftonline.com/', subscription().tenantId, '/')]",
+                "validateIssuer": false,
+                "allowedAudiences": [
+                    "[parameters('aadAppRegistrationUri')]"
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,208 @@
+{
+   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+   "contentVersion": "1.0.0.0",
+   "parameters": {
+      "fileBaseUrl": {
+         "type": "securestring",
+         "metadata": {
+            "description": "URL for the temporary file location"
+         }
+      },
+      "containerSasToken": {
+         "type": "securestring",
+         "metadata": {
+            "description": "SAS Token for accesing template files"
+         }
+      },
+      "storageAccountName": {
+         "type": "string",
+         "metadata": {
+            "description": "Name of Storage Account for Function data"
+         }
+      },
+      "storageAccountType": {
+         "type": "string",
+         "metadata": {
+            "description": "Storage account type"
+         }
+      },
+      "appServicePlanName": {
+         "type": "string",
+         "metadata": {
+            "description": "The name of the owner of the service"
+         }
+      },
+      "appServicePlanSkuName": {
+         "type": "string",
+         "metadata": {
+            "description": "The pricing tier of this API Management service"
+         }
+      },
+      "workerSize": {
+         "type": "string",
+         "metadata": {
+            "description": "The instance  size of this API Management service."
+         }
+      },
+      "appInsightsName": {
+         "type": "string"
+      },
+      "functionAppName": {
+         "type": "string"
+      } /*,
+      "userAssignedIdentityName": {
+         "type": "string",
+         "metadata": {
+            "description": "the name of the Managed Identity resource."
+         }
+      }*/
+      ,
+      "aadAppRegistrationClientId": {
+         "type": "string"
+      },
+      "aadAppRegistrationUri": {
+         "type": "string"
+      }
+   },
+   "variables": {
+   },
+   "resources": [
+      {
+         "apiVersion": "2017-05-10",
+         "name": "storageaccount.func",
+         "type": "Microsoft.Resources/deployments",
+         "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+               "uri": "[concat(parameters('fileBaseUrl'), 'storageaccount.func.template.json', parameters('containerSasToken'))]",
+               "contentVersion": "1.0.0.0"
+            },
+            "parameters": {
+               "storageAccountName": {
+                  "value": "[parameters('storageAccountName')]"
+               },
+               "storageAccountType": {
+                  "value": "[parameters('storageAccountType')]"
+               }
+            }
+         }
+      },
+      {
+         "apiVersion": "2017-05-10",
+         "name": "appserviceplan",
+         "type": "Microsoft.Resources/deployments",
+         "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+               "uri": "[concat(parameters('fileBaseUrl'), 'appserviceplan.template.json', parameters('containerSasToken'))]",
+               "contentVersion": "1.0.0.0"
+            },
+            "parameters": {
+               "appServicePlanName": {
+                  "value": "[parameters('appServicePlanName')]"
+               },
+               "appServicePlanSkuName": {
+                  "value": "[parameters('appServicePlanSkuName')]"
+               },
+               "workerSize": {
+                  "value": "[parameters('workerSize')]"
+               }
+            }
+         }
+      },
+      {
+         "apiVersion": "2017-05-10",
+         "name": "appinsights.func",
+         "type": "Microsoft.Resources/deployments",
+         "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+               "uri": "[concat(parameters('fileBaseUrl'), 'appinsights.func.template.json', parameters('containerSasToken'))]",
+               "contentVersion": "1.0.0.0"
+            },
+            "parameters": {
+               "appInsightsName": {
+                  "value": "[parameters('appInsightsName')]"
+               }
+            }
+         }
+      },
+      /*      {
+         "apiVersion": "2017-05-10",
+         "name": "ManagedIdentity",
+         "type": "Microsoft.Resources/deployments",
+         "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+               "uri": "[concat(parameters('fileBaseUrl'), 'ManagedIdentity.template.json', parameters('containerSasToken'))]",
+               "contentVersion": "1.0.0.0"
+            },
+            "parameters": {
+               "userAssignedIdentityName": {
+                  "value": "[parameters('userAssignedIdentityName')]"
+               }
+            }
+         }
+      }, */
+      {
+         "apiVersion": "2017-05-10",
+         "name": "func.template",
+         "type": "Microsoft.Resources/deployments",
+         "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+               "uri": "[concat(parameters('fileBaseUrl'), 'func.template.json', parameters('containerSasToken'))]",
+               "contentVersion": "1.0.0.0"
+            },
+            "parameters": {
+               "appInsightsName": {
+                  "value": "[parameters('appInsightsName')]"
+               },
+               "functionAppName": {
+                  "value": "[parameters('functionAppName')]"
+               },
+               "storageAccountName": {
+                  "value": "[parameters('storageAccountName')]"
+               },
+               "appServicePlanName": {
+                  "value": "[parameters('appServicePlanName')]"
+               } /*,
+               "userAssignedIdentityName": {
+                  "value": "[parameters('userAssignedIdentityName')]"
+               }*/
+            }
+         },
+         "dependsOn": [
+            "[resourceId('Microsoft.Resources/deployments', 'storageaccount.func')]",
+            "[resourceId('Microsoft.Resources/deployments', 'appserviceplan')]",
+            /*"[resourceId('Microsoft.Resources/deployments', 'ManagedIdentity')]",*/
+            "[resourceId('Microsoft.Resources/deployments', 'appinsights.func')]"
+         ]
+      },
+      {
+         "apiVersion": "2017-05-10",
+         "name": "webconfig",
+         "type": "Microsoft.Resources/deployments",
+         "properties": {
+            "mode": "Incremental",
+            "templateLink": {
+               "uri": "[concat(parameters('fileBaseUrl'), 'webconfig.template.json', parameters('containerSasToken'))]",
+               "contentVersion": "1.0.0.0"
+            },
+            "parameters": {
+               "aadAppRegistrationClientId": {
+                  "value": "[parameters('aadAppRegistrationClientId')]"
+               },
+               "aadAppRegistrationUri": {
+                  "value": "[parameters('aadAppRegistrationUri')]"
+               }
+            }
+         },
+         "dependsOn": [
+            "[resourceId('Microsoft.Resources/deployments', 'func.template')]"
+         ]
+      }
+   ],
+   "outputs": {
+   }
+}
